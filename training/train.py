@@ -112,7 +112,7 @@ def main():
 
     if not os.path.isdir(MODEL_DIR_PATH):
         os.mkdir(MODEL_DIR_PATH)
-    model_path = os.path.join('model', 'face_rrecogniser.pkl')
+    model_path = os.path.join('model', 'face_recogniser.pkl')
     joblib.dump(FaceRecogniser(features_extractor, clf, idx_to_class), model_path)
 
 

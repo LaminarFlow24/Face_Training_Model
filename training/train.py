@@ -36,8 +36,13 @@ def dataset_to_embeddings(dataset, features_extractor):
 
     embeddings = []
     labels = []
+    
+    # Create a dictionary to track number of images per label
+    images_per_label = {label: 0 for label in dataset.class_to_idx.values()}
+
     for img_path, label in dataset.samples:
         print(img_path)
+        images_per_label[label] += 1
         _, embedding = features_extractor(transform(Image.open(img_path).convert('RGB')))
         if embedding is None:
             print("Could not find face on {}".format(img_path))
@@ -48,7 +53,15 @@ def dataset_to_embeddings(dataset, features_extractor):
         embeddings.append(embedding.flatten())
         labels.append(label)
 
-    return np.stack(embeddings), labels
+    # Filter out labels that have 0 images
+    valid_indices = [i for i, label in enumerate(labels) if images_per_label[label] > 0]
+
+    # Only keep embeddings and labels that correspond to valid indices
+    embeddings = np.array([embeddings[i] for i in valid_indices])
+    labels = [labels[i] for i in valid_indices]
+
+    return embeddings, labels
+
 
 
 def load_data(args, features_extractor):
@@ -84,15 +97,24 @@ def main():
     embeddings, labels, class_to_idx = load_data(args, features_extractor)
     clf = train(args, embeddings, labels)
 
-    idx_to_class = {v: k for k, v in class_to_idx.items()}
+    # Filter class_to_idx to only include classes that have actual labels
+    unique_labels = set(labels)
+    filtered_class_to_idx = {k: v for k, v in class_to_idx.items() if v in unique_labels}
 
+    # Create idx_to_class from the filtered class_to_idx
+    idx_to_class = {v: k for k, v in filtered_class_to_idx.items()}
+
+    # Generate target names for only the classes that have labels
     target_names = map(lambda i: i[1], sorted(idx_to_class.items(), key=lambda i: i[0]))
+    
+    # Print classification report using the filtered target names
     print(metrics.classification_report(labels, clf.predict(embeddings), target_names=list(target_names)))
 
     if not os.path.isdir(MODEL_DIR_PATH):
         os.mkdir(MODEL_DIR_PATH)
-    model_path = os.path.join('model', 'face_recogniser.pkl')
+    model_path = os.path.join('model', 'face_rrecogniser.pkl')
     joblib.dump(FaceRecogniser(features_extractor, clf, idx_to_class), model_path)
+
 
 
 if __name__ == '__main__':

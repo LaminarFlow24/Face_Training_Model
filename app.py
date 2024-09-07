@@ -59,7 +59,7 @@ if uploaded_file is not None:
                         st.download_button(
                             label="Download Trained Model",
                             data=f,
-                            file_name="face_rrecogniser.pkl",
+                            file_name="face_recogniser.pkl",
                             mime="application/octet-stream"
                         )
                 else:

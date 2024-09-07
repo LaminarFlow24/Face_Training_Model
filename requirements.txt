@@ -10,5 +10,5 @@ scikit_learn
 torch
 torchvision
 Werkzeug
-opencv-python
 matplotlib
+opencv-python
